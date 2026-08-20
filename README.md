@@ -43,3 +43,52 @@ npm run preview
 ```
 
 ## Project structure
+src/
+main.jsx # React entry point
+App.jsx # top-level state: uploaded files -> processing -> results
+App.css # styling
+components/
+UploadZone.jsx # drag-and-drop / file picker
+ResultsPanel.jsx # per-file extracted text + analysis display
+utils/
+extractText.js # PDF text extraction (pdf.js)
+ocr.js # image OCR (tesseract.js)
+analyzer.js # engagement scoring heuristics
+
+## Approach (~150 words)
+
+Each uploaded file is routed by MIME type: PDFs go through `pdf.js`, which
+reads text content page-by-page; images go through `tesseract.js`, an
+in-browser Tesseract OCR build, with progress reported back to the UI via its
+logger callback. Both paths converge on a plain extracted-text string, which
+is then run through a rule-based `analyzeContent()` function — no external
+AI/ML API needed, so it works offline and has zero marginal cost per
+analysis. The heuristics check things known to affect engagement: hashtag
+count and density, presence of a question or call-to-action, mentions,
+emoji use, link placement, and sentence length, producing a 0–100 score and
+a list of plain-language suggestions. State is managed per-file (id, status,
+progress, text, analysis, error) so multiple uploads can process and fail
+independently without blocking each other, and each stage surfaces a
+loading or error state in the UI.
+
+## What I'd extend first
+
+1. **Swap the heuristic scorer for an LLM call** (e.g. Claude/OpenAI via a
+   thin serverless function) to get more nuanced, tone-aware suggestions —
+   keep the current heuristics as an instant, zero-cost fallback.
+2. **Multi-language OCR** — `tesseract.js` supports other language packs;
+   detect language or let the user pick one.
+3. **Persist results** (localStorage or a small backend) so a session
+   survives a refresh, and allow exporting suggestions as a report.
+4. **PDF image fallback** — if a PDF page has no extractable text (e.g. a
+   scanned PDF), rasterize the page and run it through the OCR path too.
+5. **Batch scoring dashboard** — once multiple files are analyzed, show an
+   aggregate view comparing scores across posts.
+
+## Notes
+
+- No `node_modules`, `.env`, build output, or editor folders are committed
+  (see `.gitignore`), per submission guidelines.
+- No backend, so there's nothing to deploy for a live URL beyond the static
+  build (`npm run build` output in `dist/`) — deploy that folder to any
+  static host (Vercel, Netlify, GitHub Pages) for a hosted URL.
