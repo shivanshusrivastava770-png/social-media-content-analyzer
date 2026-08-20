@@ -42,19 +42,6 @@ npm run build
 npm run preview
 ```
 
-## Project structure
-src/
-main.jsx # React entry point
-App.jsx # top-level state: uploaded files -> processing -> results
-App.css # styling
-components/
-UploadZone.jsx # drag-and-drop / file picker
-ResultsPanel.jsx # per-file extracted text + analysis display
-utils/
-extractText.js # PDF text extraction (pdf.js)
-ocr.js # image OCR (tesseract.js)
-analyzer.js # engagement scoring heuristics
-
 ## Approach (~150 words)
 
 Each uploaded file is routed by MIME type: PDFs go through `pdf.js`, which
